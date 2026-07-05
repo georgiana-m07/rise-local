@@ -16,7 +16,7 @@ Sources: risescience.com, Rise Science help center, App Store listing, MoveWell 
 
 - **Stack:** vanilla HTML/CSS/JS single-page app, ES modules, zero dependencies. Persistence via `localStorage`. Served locally with `python3 -m http.server` via a `run.sh` (ES modules require http, and it keeps testing honest).
 - **Tests:** pure-function sleep model in `sleep-model.js`, unit-tested with Node's built-in `node --test`. The model file has no DOM/browser imports so Node and the browser share it.
-- **Scope (core only):** log/edit/delete sleep sessions and naps, learned sleep need with manual override, 14-night weighted sleep debt, today's energy schedule with labeled zones + curve, 14-night progress chart, sample-data seeding for instant demo. Nothing else (no habits, alarms, sounds, calendar sync, accounts).
+- **Scope (core only):** log/delete sleep sessions and naps (edit = delete + re-log), learned sleep need with manual override, 14-night weighted sleep debt, today's energy schedule with labeled zones + curve, 14-night progress chart, sample-data seeding for instant demo. Nothing else (no habits, alarms, sounds, calendar sync, accounts).
 
 ## Architecture
 
