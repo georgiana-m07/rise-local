@@ -41,3 +41,16 @@ export function estimateSleepNeed(sessions, todayIso) {
   const hours = Math.min(10, Math.max(6.5, percentile(values, 0.75)));
   return { hours, estimated: true };
 }
+
+export function sleepDebt(sessions, needHours, todayIso) {
+  const totals = nightlyTotals(sessions);
+  let debt = 0;
+  for (let age = 0; age < DEBT_WINDOW_DAYS; age++) {
+    const d = isoDaysAgo(todayIso, age);
+    if (!totals.has(d)) continue; // no data: assume need was met
+    debt += Math.pow(DEBT_DECAY, age) * (needHours - totals.get(d));
+  }
+  const hours = Math.max(0, debt);
+  const status = hours < 5 ? "low" : hours <= 10 ? "moderate" : "high";
+  return { hours, status };
+}
