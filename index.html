@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RISE Local</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🌅 RISE Local</h1>
+    <nav id="tabs">
+      <button data-tab="sleep" class="active">Sleep</button>
+      <button data-tab="energy">Energy</button>
+      <button data-tab="progress">Progress</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- SLEEP TAB -->
+    <section id="tab-sleep" class="pane active">
+      <div id="empty-card" class="card hidden">
+        <h2>Welcome 👋</h2>
+        <p>RISE Local tracks your <strong>sleep debt</strong> (how much sleep you owe your body
+          over the last 14 nights) and predicts your <strong>energy schedule</strong> for the day.
+          Log your nights below, or load two weeks of sample data to look around.</p>
+        <button id="btn-sample" class="primary">Load sample data</button>
+      </div>
+
+      <div class="card hero">
+        <div class="hero-main">
+          <span class="hero-label">Sleep debt</span>
+          <span id="debt-value">–</span>
+          <span id="debt-status" class="pill">–</span>
+        </div>
+        <p id="debt-note"></p>
+      </div>
+
+      <div class="row">
+        <div class="card half">
+          <h3>Sleep need</h3>
+          <p><span id="need-value" class="big">–</span></p>
+          <p id="need-source" class="muted"></p>
+          <label>Override (hours) <input id="need-override" type="number" min="4" max="12" step="0.25" placeholder="auto"></label>
+        </div>
+        <div class="card half">
+          <h3>Wake goal</h3>
+          <p class="muted">Used to suggest tonight's bedtime.</p>
+          <label>Target wake time <input id="wake-goal" type="time" value="07:30"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Last night</h3>
+        <p id="lastnight" class="muted">No sleep logged yet.</p>
+      </div>
+
+      <div class="card">
+        <h3>Log sleep</h3>
+        <form id="log-form">
+          <label>Fell asleep <input id="log-start" type="datetime-local" required></label>
+          <label>Woke up <input id="log-end" type="datetime-local" required></label>
+          <label>Type
+            <select id="log-type">
+              <option value="sleep">Night sleep</option>
+              <option value="nap">Nap</option>
+            </select>
+          </label>
+          <button type="submit" class="primary">Add</button>
+        </form>
+        <p id="log-error" class="error"></p>
+      </div>
+
+      <div class="card">
+        <h3>Recent sessions</h3>
+        <ul id="sessions-list"></ul>
+        <div class="card-actions">
+          <button id="btn-sample-2">Load sample data</button>
+          <button id="btn-clear" class="danger">Clear all data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENERGY TAB -->
+    <section id="tab-energy" class="pane">
+      <div class="card">
+        <h3>Today's energy schedule</h3>
+        <p id="energy-meta" class="muted"></p>
+        <div id="energy-chart"></div>
+      </div>
+      <div class="card">
+        <h3>Zones</h3>
+        <ul id="zones-list" class="zones"></ul>
+      </div>
+    </section>
+
+    <!-- PROGRESS TAB -->
+    <section id="tab-progress" class="pane">
+      <div class="card">
+        <h3>Last 14 nights vs your need</h3>
+        <div id="progress-chart"></div>
+      </div>
+      <div class="card">
+        <h3>Sleep debt trend</h3>
+        <div id="debt-trend-chart"></div>
+        <p id="progress-note" class="muted"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="muted">Local only. Your data never leaves this machine.</footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
