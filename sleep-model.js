@@ -20,3 +20,24 @@ export function isoDaysAgo(todayIso, n) {
   const p = (x) => String(x).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+
+function percentile(sortedAsc, p) {
+  const idx = (sortedAsc.length - 1) * p;
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sortedAsc[lo] + (sortedAsc[hi] - sortedAsc[lo]) * (idx - lo);
+}
+
+// People tend to undersleep their need, so a high percentile of what they
+// actually slept approximates what their body asks for when it can.
+export function estimateSleepNeed(sessions, todayIso) {
+  const totals = nightlyTotals(sessions);
+  const values = [];
+  for (let age = 0; age < 60; age++) {
+    const d = isoDaysAgo(todayIso, age);
+    if (totals.has(d)) values.push(totals.get(d));
+  }
+  if (values.length < 7) return { hours: DEFAULT_NEED_HOURS, estimated: false };
+  values.sort((a, b) => a - b);
+  const hours = Math.min(10, Math.max(6.5, percentile(values, 0.75)));
+  return { hours, estimated: true };
+}
