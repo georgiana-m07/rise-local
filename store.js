@@ -8,7 +8,7 @@ export function localIsoDate(d) {
   return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`;
 }
 
-export function newSession({ start, end, type }) {
+export function newSession({ start, end, type, date }) {
   const s = new Date(start), e = new Date(end);
   if (isNaN(s) || isNaN(e)) throw new Error("Enter valid start and end times.");
   if (e <= s) throw new Error("End time must be after start time.");
@@ -16,7 +16,7 @@ export function newSession({ start, end, type }) {
     throw new Error("That session is longer than 16 hours. Double-check the dates.");
   return {
     id: crypto.randomUUID(),
-    date: localIsoDate(e),
+    date: date ?? localIsoDate(e),
     start: s.toISOString(),
     end: e.toISOString(),
     type: type === "nap" ? "nap" : "sleep",
