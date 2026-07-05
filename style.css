@@ -63,7 +63,19 @@ main { max-width: 860px; margin: 0 auto; padding: 20px 24px 40px; }
   padding: 18px 20px;
   margin-bottom: 16px;
 }
-.card.hidden { display: none; }
+.hidden { display: none; }
+
+textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--card-edge);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  width: 100%;
+  resize: vertical;
+}
 
 .row { display: flex; gap: 16px; flex-wrap: wrap; }
 .row .half { flex: 1 1 260px; margin-bottom: 16px; }

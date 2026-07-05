@@ -20,6 +20,24 @@ The app is a PWA (installable web app). Two ways to get it on your phone:
 
 Either way, use "Export backup" now and then. iOS can clear web app storage if the app goes unused for a long time and the backup file makes that a non-event.
 
+## Sync sleep from your Apple Watch
+
+Apple only lets native apps read Health data directly, so RISE Local uses a small iOS Shortcut as a bridge: the Shortcut reads your sleep from the Health app and copies it, then the app imports it from the clipboard (merging stages, splitting nights at awakenings, deduping anything already logged).
+
+Build the Shortcut once, about 5 minutes in the Shortcuts app:
+
+1. New shortcut, name it **Sync Sleep to RISE**
+2. Add **Find Health Samples**. Set type to **Sleep**, add filter **Start Date, is in the last, 7 days**. The first run asks for Health access, allow reading Sleep
+3. Add **Repeat with Each** using the Health Samples as input. Inside the repeat:
+   - **Format Date** on the Repeat Item's **Start Date**, date format **Custom**: `yyyy-MM-dd'T'HH:mm:ss`
+   - **Format Date** on the Repeat Item's **End Date**, same custom format
+   - **Text** containing exactly: `FormattedStartDate|FormattedEndDate|Value` (pick the two Formatted Date magic variables and the Repeat Item's Value detail, with the `|` pipes between them)
+   - **Add to Variable**, variable name **Lines**
+4. After the repeat: **Combine Text**, combine **Lines** with **New Lines**
+5. Add **Copy to Clipboard**
+
+Daily use: run the shortcut (Siri, widget or its icon), open RISE Local, tap **Import from Apple Health**, tap Allow Paste. Done, debt updates from your real watch data.
+
 ## What it does
 
 - **Sleep tab**: log nights and naps, see your sleep debt (how much sleep you owe your body over the last 14 nights) and your learned sleep need

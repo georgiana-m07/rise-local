@@ -1,4 +1,4 @@
-const CACHE = "rise-local-v1";
+const CACHE = "rise-local-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./sleep-model.js",
   "./store.js",
   "./sample-data.js",
+  "./health-import.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -14,7 +15,13 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: "reload" bypasses the HTTP cache so a new SW version never
+  // precaches stale files (GitHub Pages serves 10-minute cache headers).
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
