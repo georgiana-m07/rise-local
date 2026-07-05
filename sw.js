@@ -1,4 +1,4 @@
-const CACHE = "rise-local-v1";
+const CACHE = "rise-local-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./sleep-model.js",
   "./store.js",
   "./sample-data.js",
+  "./health-import.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

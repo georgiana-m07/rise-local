@@ -88,6 +88,23 @@
       </div>
 
       <div class="card">
+        <h3>Apple Health</h3>
+        <p class="muted">Run your "Sync Sleep to RISE" shortcut first (it copies your watch's sleep data), then tap import. Setup guide is in the README.</p>
+        <div class="card-actions">
+          <button id="btn-health" class="primary">Import from Apple Health</button>
+        </div>
+        <div id="health-manual" class="hidden">
+          <label>Or paste the copied text here
+            <textarea id="health-text" rows="4" placeholder="2026-07-06T23:10:00|2026-07-07T00:40:00|Core"></textarea>
+          </label>
+          <div class="card-actions">
+            <button id="btn-health-paste">Import pasted text</button>
+          </div>
+        </div>
+        <p id="health-msg" class="muted"></p>
+      </div>
+
+      <div class="card">
         <h3>Backup</h3>
         <p class="muted">Your data lives only on this device. Export a backup now and then, especially on iPhone.</p>
         <div class="card-actions">

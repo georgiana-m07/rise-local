@@ -3,6 +3,7 @@ import {
   nightlyTotals, durationHours, isoDaysAgo,
 } from "./sleep-model.js";
 import { makeStore, newSession, localIsoDate, exportData, importData } from "./store.js";
+import { parseHealthText } from "./health-import.js";
 import { generateSampleData } from "./sample-data.js";
 
 const store = makeStore(localStorage);
@@ -316,6 +317,45 @@ $("#import-file").addEventListener("change", async (e) => {
   }
   e.target.value = "";
 });
+
+function runHealthImport(text) {
+  const r = parseHealthText(text, sessions);
+  if (r.imported.length) {
+    sessions = sessions.concat(r.imported);
+    persist();
+    renderAll();
+  }
+  const bits = [`Imported ${r.imported.length} sleep sessions`];
+  if (r.duplicates) bits.push(`${r.duplicates} already logged`);
+  if (r.ignored) bits.push(`${r.ignored} lines skipped`);
+  $("#health-msg").textContent = r.imported.length || r.duplicates
+    ? bits.join(", ") + "."
+    : "No sleep data found in that text. Run the shortcut first, then import.";
+}
+
+$("#btn-health").addEventListener("click", async () => {
+  try {
+    runHealthImport(await navigator.clipboard.readText());
+  } catch {
+    $("#health-manual").classList.remove("hidden");
+    $("#health-msg").textContent =
+      "Couldn't read the clipboard. Paste the copied text below instead.";
+  }
+});
+
+$("#btn-health-paste").addEventListener("click", () => {
+  runHealthImport($("#health-text").value);
+  $("#health-text").value = "";
+});
+
+if (location.hash.startsWith("#health=")) {
+  try {
+    runHealthImport(decodeURIComponent(location.hash.slice("#health=".length)));
+  } catch {
+    $("#health-msg").textContent = "Couldn't read the shared sleep data.";
+  }
+  history.replaceState(null, "", location.pathname + location.search);
+}
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch((err) =>
