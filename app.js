@@ -325,7 +325,8 @@ function runHealthImport(text) {
     persist();
     renderAll();
   }
-  const bits = [`Imported ${r.imported.length} sleep sessions`];
+  const n = r.imported.length;
+  const bits = [`Imported ${n} sleep session${n === 1 ? "" : "s"}`];
   if (r.duplicates) bits.push(`${r.duplicates} already logged`);
   if (r.ignored) bits.push(`${r.ignored} lines skipped`);
   $("#health-msg").textContent = r.imported.length || r.duplicates
@@ -348,7 +349,8 @@ $("#btn-health-paste").addEventListener("click", () => {
   $("#health-text").value = "";
 });
 
-if (location.hash.startsWith("#health=")) {
+function maybeImportFromHash() {
+  if (!location.hash.startsWith("#health=")) return;
   try {
     runHealthImport(decodeURIComponent(location.hash.slice("#health=".length)));
   } catch {
@@ -356,6 +358,8 @@ if (location.hash.startsWith("#health=")) {
   }
   history.replaceState(null, "", location.pathname + location.search);
 }
+window.addEventListener("hashchange", maybeImportFromHash);
+maybeImportFromHash();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch((err) =>
