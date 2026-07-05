@@ -29,7 +29,7 @@ Build the Shortcut once, about 5 minutes in the Shortcuts app:
 1. New shortcut, name it **Sync Sleep to RISE**
 2. Add **Find Health Samples**. Set type to **Sleep**, add filter **Start Date, is in the last, 7 days**. The first run asks for Health access, allow reading Sleep
 3. Add **Repeat with Each** using the Health Samples as input. Inside the repeat:
-   - **Format Date** on the Repeat Item's **Start Date**, date format **Custom**: `yyyy-MM-dd'T'HH:mm:ss`
+   - **Format Date** on the Repeat Item's **Start Date**, date format **Custom**: `yyyy-MM-dd HH:mm:ss`
    - **Format Date** on the Repeat Item's **End Date**, same custom format
    - **Text** containing exactly: `FormattedStartDate|FormattedEndDate|Value` (pick the two Formatted Date magic variables and the Repeat Item's Value detail, with the `|` pipes between them)
    - **Add to Variable**, variable name **Lines**
