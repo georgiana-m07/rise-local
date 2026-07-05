@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>RISE Local</title>
+  <meta name="theme-color" content="#0e1420">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RISE Local">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -78,6 +85,17 @@
           <button id="btn-sample-2">Load sample data</button>
           <button id="btn-clear" class="danger">Clear all data</button>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Backup</h3>
+        <p class="muted">Your data lives only on this device. Export a backup now and then, especially on iPhone.</p>
+        <div class="card-actions">
+          <button id="btn-export">Export backup</button>
+          <button id="btn-import">Import backup</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+        <p id="backup-msg" class="muted"></p>
       </div>
     </section>
 
