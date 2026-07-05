@@ -23,14 +23,33 @@ export function newSession({ start, end, type }) {
   };
 }
 
+const isValidSession = (s) => s && s.id && s.date && s.start && s.end;
+
+export function exportData(sessions, settings) {
+  return JSON.stringify({ app: "rise-local", version: 1, sessions, settings }, null, 2);
+}
+
+export function importData(json) {
+  let raw;
+  try {
+    raw = JSON.parse(json);
+  } catch {
+    throw new Error("That file isn't a valid backup.");
+  }
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.sessions))
+    throw new Error("That file isn't a valid backup.");
+  return {
+    sessions: raw.sessions.filter(isValidSession),
+    settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) },
+  };
+}
+
 export function makeStore(storage) {
   return {
     loadSessions() {
       try {
         const raw = JSON.parse(storage.getItem(SESSIONS_KEY) ?? "[]");
-        return Array.isArray(raw)
-          ? raw.filter((s) => s && s.id && s.date && s.start && s.end)
-          : [];
+        return Array.isArray(raw) ? raw.filter(isValidSession) : [];
       } catch {
         console.warn("rise-local: sessions storage was corrupt, starting empty");
         return [];
