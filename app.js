@@ -57,9 +57,9 @@ function compute() {
 /* ---------- Sleep tab ---------- */
 
 const DEBT_NOTES = {
-  low: "Nice — you're inside the healthy range (under 5h). Keep bedtimes steady.",
+  low: "Nice, you're inside the healthy range (under 5h). Keep bedtimes steady.",
   moderate: "You owe your body some sleep. Aim for the suggested bedtime this week to pay it down.",
-  high: "High debt — expect lower peaks and rougher dips. Prioritize early nights; naps help too.",
+  high: "High debt. Expect lower peaks and rougher dips. Prioritize early nights; naps help too.",
 };
 
 function renderSleep(c) {
@@ -203,7 +203,7 @@ function renderProgress(c) {
       <line x1="${L}" y1="${dy(5)}" x2="${W - R}" y2="${dy(5)}"
         stroke="#f6a13c" stroke-dasharray="6 4" opacity="0.6"/>
       <text x="${W - R}" y="${dy(5) - 5}" fill="#f6a13c" font-size="11" text-anchor="end"
-        opacity="0.8">5h — keep debt below this</text>
+        opacity="0.8">5h, keep debt below this</text>
       <polyline points="${pts}" fill="none" stroke="#a97df5" stroke-width="2.5"/>
       ${days.map((d, i) => `<circle cx="${dx(i).toFixed(1)}" cy="${dy(d.debt).toFixed(1)}" r="3" fill="#a97df5"/>
         <text x="${dx(i).toFixed(1)}" y="${H - B + 16}" fill="#8b97af" font-size="10"
