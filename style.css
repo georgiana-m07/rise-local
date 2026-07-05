@@ -132,3 +132,48 @@ svg { max-width: 100%; height: auto; display: block; }
 #energy-chart, #progress-chart, #debt-trend-chart { overflow-x: auto; }
 
 footer { text-align: center; padding: 18px; font-size: 13px; }
+
+@media (pointer: coarse) {
+  button, input, select { min-height: 44px; }
+}
+
+@media (max-width: 640px) {
+  header {
+    padding: calc(14px + env(safe-area-inset-top)) 18px 12px;
+    justify-content: center;
+  }
+
+  nav#tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    background: var(--card);
+    border-top: 1px solid var(--card-edge);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  nav#tabs button {
+    flex: 1;
+    min-height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  main { padding: 14px 14px 110px; }
+  footer { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+  #debt-value { font-size: 58px; }
+  .hero-main { row-gap: 4px; }
+
+  form#log-form { flex-direction: column; align-items: stretch; }
+  form#log-form label { width: 100%; }
+  form#log-form input, form#log-form select { width: 100%; }
+  .card-actions { flex-wrap: wrap; }
+  .card-actions button { flex: 1 1 45%; }
+
+  #energy-chart svg, #progress-chart svg, #debt-trend-chart svg {
+    min-width: 560px;
+  }
+}

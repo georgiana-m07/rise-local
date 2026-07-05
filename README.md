@@ -8,7 +8,17 @@ A local rebuild of the core of [RISE: Sleep Tracker](https://www.risescience.com
 ./run.sh
 ```
 
-That starts a tiny local server and opens http://localhost:8713 in your browser. Stop it with Ctrl+C.
+That starts a tiny local server and opens http://localhost:8713 in your browser. It also prints the address to open on your phone. Stop it with Ctrl+C.
+
+## Install on iPhone
+
+The app is a PWA (installable web app). Two ways to get it on your phone:
+
+**Option A, hosted (best experience)**: put the static files on any HTTPS host (GitHub Pages works great and is free). Open the URL in Safari on the iPhone, tap Share, then "Add to Home Screen". After the first load it works fully offline and your data stays on the phone, never on the server.
+
+**Option B, from your Mac**: run `./run.sh`, open the printed `http://192.168.x.x:8713` address in Safari on the iPhone (same Wi-Fi), tap Share, then "Add to Home Screen". You get the icon and fullscreen app feel, but iOS only allows offline caching over HTTPS, so this version needs the Mac server running whenever you open it.
+
+Either way, use "Export backup" now and then. iOS can clear web app storage if the app goes unused for a long time and the backup file makes that a non-event.
 
 ## What it does
 

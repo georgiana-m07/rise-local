@@ -60,6 +60,16 @@ rise-local/
 1. Unit tests (`node --test`): need estimation, debt math (weighting, naps, surplus, clamping), schedule zone ordering and bounds, bedtime suggestion, curve range.
 2. End-to-end: serve the app, drive it in a headless browser — seed sample data, log a night, verify debt number changes, zones render, data survives reload.
 
+## Mobile / PWA addendum (2026-07-06)
+
+Georgiana wants the app installable on her iPhone with all existing features; sleep debt is the priority.
+
+- **PWA**: `manifest.json` (standalone display, theme colors, 192/512 + maskable icons), `sw.js` service worker (precache all assets, cache-first with network fallback, versioned cache name), iOS meta tags (`apple-touch-icon` 180px, `apple-mobile-web-app-capable`, status bar style). SW registers only in secure contexts; on plain LAN http it silently skips (page still works, served live).
+- **Responsive UI**: below 640px the tab nav becomes a fixed bottom bar (native-app feel), touch targets ≥44px, form fields stack full-width, charts keep a 560px min-width inside horizontal scroll containers.
+- **Data safety on iOS**: export/import JSON backup buttons (iOS can evict web storage; backups make that survivable). `exportData`/`importData` in store.js, TDD.
+- **Install paths** (user picks): (a) GitHub Pages hosting (free, HTTPS, offline-capable anywhere, data still on device) — requires her OK to publish; (b) LAN install from the Mac (`http://<mac-ip>:8713`) — no publishing, but needs the Mac server running and no offline cache.
+- `run.sh` prints the LAN URL for the phone.
+
 ## Success criteria ("basics work end to end")
 
 - `./run.sh` opens the app; logging a night persists across reload.

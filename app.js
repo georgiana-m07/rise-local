@@ -2,7 +2,7 @@ import {
   estimateSleepNeed, sleepDebt, energySchedule,
   nightlyTotals, durationHours, isoDaysAgo,
 } from "./sleep-model.js";
-import { makeStore, newSession, localIsoDate } from "./store.js";
+import { makeStore, newSession, localIsoDate, exportData, importData } from "./store.js";
 import { generateSampleData } from "./sample-data.js";
 
 const store = makeStore(localStorage);
@@ -286,6 +286,41 @@ $("#need-override").addEventListener("change", (e) => {
   persist();
   renderAll();
 });
+
+$("#btn-export").addEventListener("click", () => {
+  const blob = new Blob([exportData(sessions, settings)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `rise-local-backup-${todayIso()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  $("#backup-msg").textContent = "Backup exported.";
+});
+
+$("#btn-import").addEventListener("click", () => $("#import-file").click());
+
+$("#import-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = importData(await file.text());
+    sessions = data.sessions;
+    settings = data.settings;
+    persist();
+    $("#wake-goal").value = settings.wakeGoal;
+    $("#need-override").value = settings.needOverride ?? "";
+    renderAll();
+    $("#backup-msg").textContent = `Imported ${sessions.length} sessions.`;
+  } catch (err) {
+    $("#backup-msg").textContent = err.message;
+  }
+  e.target.value = "";
+});
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch((err) =>
+    console.warn("rise-local: service worker not registered", err));
+}
 
 function setDefaultFormTimes() {
   const yesterday = isoDaysAgo(todayIso(), 1);
