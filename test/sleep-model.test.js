@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  durationHours, nightlyTotals, isoDaysAgo, estimateSleepNeed, sleepDebt,
+  durationHours, nightlyTotals, isoDaysAgo, estimateSleepNeed, sleepDebt, suggestedBedtime, energySchedule,
 } from "../sleep-model.js";
 
 const mkNight = (todayIso, age, hours) => {
@@ -81,4 +81,38 @@ test("status bands: low < 5, moderate 5-10, high > 10", () => {
   assert.equal(sleepDebt(nights, 8, "2026-07-05").status, "moderate");
   const bad = [0, 1, 2, 3, 4, 5, 6].map((a) => mkNight("2026-07-05", a, 5.5));
   assert.equal(sleepDebt(bad, 8, "2026-07-05").status, "high");
+});
+
+test("suggestedBedtime = wake goal minus (need + paydown), wrapped to a day", () => {
+  // wake 7:30 = 450min, need 8h, no debt -> 23:30 = 1410
+  assert.equal(suggestedBedtime(450, 8, 0), 1410);
+  // 10h debt -> paydown capped at 1h -> 22:30
+  assert.equal(suggestedBedtime(450, 8, 10), 1350);
+});
+
+test("energySchedule zones are ordered and melatonin window is 60min ending at bedtime", () => {
+  const s = energySchedule({ wakeMin: 450, needHours: 8, debtHours: 2, wakeGoalMin: 450 });
+  const keys = s.zones.map((z) => z.key);
+  assert.deepEqual(keys,
+    ["groggy", "morningPeak", "dip", "eveningPeak", "windDown", "melatonin"]);
+  for (let i = 1; i < s.zones.length; i++)
+    assert.ok(s.zones[i].start >= s.zones[i - 1].start, "zones sorted");
+  const mel = s.zones.at(-1);
+  assert.equal(mel.end - mel.start, 60);
+  assert.equal(mel.end % 1440, s.bedtimeMin);
+});
+
+test("energy curve stays in 0..100 and peaks beat the afternoon dip", () => {
+  const s = energySchedule({ wakeMin: 450, needHours: 8, debtHours: 0, wakeGoalMin: 450 });
+  for (const p of s.curve) assert.ok(p.energy >= 0 && p.energy <= 100);
+  const at = (t) => s.curve.find((p) => p.t === t)?.energy;
+  assert.ok(at(450 + 210) > at(450 + 420), "morning peak > dip");
+  assert.ok(at(450 + 600) > at(450 + 420), "evening peak > dip");
+});
+
+test("higher sleep debt flattens the morning peak", () => {
+  const rested = energySchedule({ wakeMin: 450, needHours: 8, debtHours: 0, wakeGoalMin: 450 });
+  const tired = energySchedule({ wakeMin: 450, needHours: 8, debtHours: 15, wakeGoalMin: 450 });
+  const peak = (s) => s.curve.find((p) => p.t === 450 + 210).energy;
+  assert.ok(peak(tired) < peak(rested));
 });
