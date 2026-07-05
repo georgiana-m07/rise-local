@@ -548,3 +548,24 @@ export function generateSampleData(todayIso) {
 - [ ] **Step 2: Serve app, drive it in a headless browser:** load page → empty state visible → click "Load sample data" → debt number and status appear → log a new short night (e.g. 02:00–06:00) → debt increases → Energy tab shows zones in order with melatonin window → Progress tab renders 14 bars → reload page → data persists → delete the logged session → debt returns to prior value.
 - [ ] **Step 3: Fix anything that fails, re-run, repeat until green.**
 - [ ] **Step 4: Commit** — `git commit -m "E2E verified"`
+
+---
+
+### Task 11 (2026-07-06): Apple Health import via Shortcuts bridge
+
+PWAs can't access HealthKit; an iOS Shortcut exports sleep samples as text lines
+`ISO_start|ISO_end|stage` (clipboard or URL hash). App side:
+
+**Files:** Create `health-import.js` + `test/health-import.test.js`; modify `store.js`
+(optional explicit date/type in newSession), `index.html` (Apple Health card),
+`app.js` (clipboard + hash import), `sw.js` (cache v2 + new asset).
+
+- [ ] TDD `parseHealthText(text, existing)`: keep asleep stages (asleep/core/deep/rem),
+  drop awake/in-bed, merge blocks with gap ≤ 60s, attribute nights (end < 18:00 same
+  day else next day), classify short daytime blocks as naps, dedupe against existing
+  by start|end, return {sessions, added, skipped}.
+- [ ] UI: "Import from Apple Health" button (navigator.clipboard.readText), manual
+  paste textarea fallback, `#health=` hash import on load, status message.
+- [ ] Bump SW cache to rise-local-v2, add health-import.js to ASSETS.
+- [ ] e2e: hash import and clipboard import add sessions, debt updates, re-import
+  skips duplicates. Deploy, verify live.
