@@ -36,6 +36,10 @@ Build the Shortcut once, about 5 minutes in the Shortcuts app:
 4. After the repeat: **Combine Text**, combine **Lines** with **New Lines**
 5. Add **Copy to Clipboard**
 
+Optional range picker: add a **List** action at the very top with items 7, 30, 60, 90 and 3650, then a **Choose from List** under it, and set the Find filter's day count to the **Chosen Item** variable. Every run then asks how far back to pull. 90 days covers everything the app's math uses (debt looks at 14 nights, need estimation at 60). Re-running any range never duplicates nights.
+
+If iOS blocks the run with "trying to share N Health items": Settings, Apps, Shortcuts, Advanced, enable **Allow Sharing Large Amounts of Data**.
+
 Daily use: run the shortcut (Siri, widget or its icon), open RISE Local, tap **Import from Apple Health**, tap Allow Paste. Done, debt updates from your real watch data.
 
 ## What it does
