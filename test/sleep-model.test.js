@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  durationHours, nightlyTotals, isoDaysAgo, estimateSleepNeed, sleepDebt, suggestedBedtime, energySchedule,
+  durationHours, nightlyTotals, isoDaysAgo, estimateSleepNeed, sleepDebt,
+  sleepSeries, suggestedBedtime, energySchedule,
 } from "../sleep-model.js";
 
 const mkNight = (todayIso, age, hours) => {
@@ -55,11 +56,17 @@ test("estimateSleepNeed uses 75th percentile of recent nightly totals, clamped",
   assert.ok(r.hours > 7.5 && r.hours < 8.3, `p75 in range, got ${r.hours}`);
 });
 
-test("sleepDebt weights recent shortfall more than old shortfall", () => {
+test("sleepDebt sums shortfall equally across the 14-night window (no decay)", () => {
   const recent = sleepDebt([mkNight("2026-07-05", 0, 6)], 8, "2026-07-05");
   const old = sleepDebt([mkNight("2026-07-05", 10, 6)], 8, "2026-07-05");
-  assert.ok(recent.hours > old.hours);
-  assert.ok(Math.abs(recent.hours - 2) < 1e-9); // decay^0 * (8-6)
+  assert.equal(recent.hours, 2); // need - slept, counted in full
+  assert.equal(old.hours, 2); // a shortfall 10 nights ago counts the same
+});
+
+test("sleepDebt reports how many of the 14 nights had data", () => {
+  const nights = [0, 1, 5].map((a) => mkNight("2026-07-05", a, 7));
+  assert.equal(sleepDebt(nights, 8, "2026-07-05").covered, 3);
+  assert.equal(sleepDebt([], 8, "2026-07-05").covered, 0);
 });
 
 test("sleepDebt ignores nights outside the 14-night window", () => {
@@ -81,6 +88,34 @@ test("status bands: low < 5, moderate 5-10, high > 10", () => {
   assert.equal(sleepDebt(nights, 8, "2026-07-05").status, "moderate");
   const bad = [0, 1, 2, 3, 4, 5, 6].map((a) => mkNight("2026-07-05", a, 5.5));
   assert.equal(sleepDebt(bad, 8, "2026-07-05").status, "high");
+});
+
+test("sleepSeries week returns 7 daily buckets, newest last", () => {
+  const nights = [0, 1, 2].map((a) => mkNight("2026-07-05", a, 7));
+  const s = sleepSeries(nights, 8, "2026-07-05", "week", 0);
+  assert.equal(s.bucket, "day");
+  assert.equal(s.buckets.length, 7);
+  assert.equal(s.buckets.at(-1).key, "2026-07-05");
+  assert.equal(s.buckets[0].key, isoDaysAgo("2026-07-05", 6));
+  assert.equal(s.buckets.at(-1).covered, true);
+  assert.equal(s.buckets[3].covered, false); // 3 days ago has no data
+});
+
+test("sleepSeries offset scrubs to the previous period", () => {
+  const s = sleepSeries([], 8, "2026-07-05", "week", 1);
+  assert.equal(s.buckets.at(-1).key, isoDaysAgo("2026-07-05", 7));
+  assert.equal(s.buckets[0].key, isoDaysAgo("2026-07-05", 13));
+});
+
+test("sleepSeries year returns 12 monthly buckets ending this month", () => {
+  const nights = [0, 1, 20].map((a) => mkNight("2026-07-05", a, 6));
+  const s = sleepSeries(nights, 8, "2026-07-05", "year", 0);
+  assert.equal(s.bucket, "month");
+  assert.equal(s.buckets.length, 12);
+  assert.equal(s.buckets.at(-1).key, "2026-07");
+  assert.equal(s.buckets.at(-1).covered, true); // July has data
+  const june = s.buckets.find((b) => b.key === "2026-06");
+  assert.equal(june.covered, true); // 20 days ago lands in June
 });
 
 test("suggestedBedtime = wake goal minus (need + paydown), wrapped to a day", () => {

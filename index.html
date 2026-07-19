@@ -132,8 +132,23 @@
     <!-- PROGRESS TAB -->
     <section id="tab-progress" class="pane">
       <div class="card">
-        <h3>Last 14 nights vs your need</h3>
+        <div class="range-bar">
+          <div id="range-tabs" class="segmented" role="tablist">
+            <button data-range="week" class="active">Week</button>
+            <button data-range="month">Month</button>
+            <button data-range="year">Year</button>
+          </div>
+          <div class="range-nav">
+            <button id="range-prev" aria-label="Earlier period">‹</button>
+            <span id="range-period" class="muted"></span>
+            <button id="range-next" aria-label="Later period">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 id="progress-title">Sleep vs your need</h3>
         <div id="progress-chart"></div>
+        <p id="progress-summary" class="muted"></p>
       </div>
       <div class="card">
         <h3>Sleep debt trend</h3>

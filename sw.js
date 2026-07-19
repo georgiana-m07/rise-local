@@ -1,4 +1,4 @@
-const CACHE = "rise-local-v3";
+const CACHE = "rise-local-v4";
 const ASSETS = [
   "./",
   "./index.html",

@@ -22,12 +22,12 @@ Either way, use "Export backup" now and then. iOS can clear web app storage if t
 
 ## Sync sleep from your Apple Watch
 
-Apple only lets native apps read Health data directly, so RISE Local uses a small iOS Shortcut as a bridge: the Shortcut reads your sleep from the Health app and copies it, then the app imports it from the clipboard (merging stages, splitting nights at awakenings, deduping anything already logged).
+Apple only lets native apps read Health data directly, so RISE Local uses a small iOS Shortcut as a bridge: the Shortcut reads your sleep from the Health app, and the app imports it (merging stages, splitting nights at awakenings, deduping anything already logged). You set it up once, pull a full year in one go, then keep it fresh.
 
-Build the Shortcut once, about 5 minutes in the Shortcuts app:
+### 1. Build the Shortcut (about 5 minutes, once)
 
 1. New shortcut, name it **Sync Sleep to RISE**
-2. Add **Find Health Samples**. Set type to **Sleep**, add filter **Start Date, is in the last, 7 days**. The first run asks for Health access, allow reading Sleep
+2. Add **Find Health Samples**. Set type to **Sleep**, add filter **Start Date, is in the last, 365 days**. The first run asks for Health access, allow reading Sleep. A full year up front means the Progress tab's Week, Month and Year views all have data to show and you can scrub back through past periods
 3. Add **Repeat with Each** using the Health Samples as input. Inside the repeat:
    - **Format Date** on the Repeat Item's **Start Date**, date format **Custom**: `yyyy-MM-dd HH:mm:ss`
    - **Format Date** on the Repeat Item's **End Date**, same custom format
@@ -36,17 +36,25 @@ Build the Shortcut once, about 5 minutes in the Shortcuts app:
 4. After the repeat: **Combine Text**, combine **Lines** with **New Lines**
 5. Add **Copy to Clipboard**
 
-Optional range picker: add a **List** action at the very top with items 7, 30, 60, 90 and 3650, then a **Choose from List** under it, and set the Find filter's day count to the **Chosen Item** variable. Every run then asks how far back to pull. 90 days covers everything the app's math uses (debt looks at 14 nights, need estimation at 60). Re-running any range never duplicates nights.
-
 If iOS blocks the run with "trying to share N Health items": Settings, Apps, Shortcuts, Advanced, enable **Allow Sharing Large Amounts of Data**.
 
-Daily use: run the shortcut (Siri, widget or its icon), open RISE Local, tap **Import from Apple Health**, tap Allow Paste. Done, debt updates from your real watch data.
+### 2. Pull your year (once)
+
+Run the shortcut (Siri, widget or its icon), open RISE Local, tap **Import from Apple Health**, tap Allow Paste. A year of nights lands in the app. Because everything is stored locally, you can now switch the Progress tab between Week, Month and Year and scrub back through periods with no re-import. This one import is what unlocks the longer views.
+
+### 3. Keep it fresh
+
+Every so often (or each morning), just rerun the shortcut and tap **Import from Apple Health** again. It only adds nights you do not already have, so re-running is always safe. To pull fewer samples on these top-ups, you can lower the Find filter to **the last 7 days** after the first big import.
+
+**Fully hands-off option (Safari only):** make a second shortcut, **RISE Auto Sync**, identical but with the Find filter at **7 days** and the final **Copy to Clipboard** replaced by: **URL Encode** the Combined Text, then a **Text** action reading `<your RISE Local URL>#health=` immediately followed by the URL-Encoded variable, then **Open URLs** on it. Add a **Personal Automation** (Automation tab → Time of Day, e.g. 9am) that runs it with **Ask Before Running** off. RISE Local opens with the night already attached, imports it, and cleans the URL so a refresh will not re-run it.
+
+Caveat: this auto-open only updates the copy of RISE Local you use **in Safari**. If you added RISE Local to your Home Screen, iOS gives that installed app its own separate storage, so the automation would not reach it, keep using the one-tap clipboard import above for the Home Screen app.
 
 ## What it does
 
 - **Sleep tab**: log nights and naps, see your sleep debt (how much sleep you owe your body over the last 14 nights) and your learned sleep need
 - **Energy tab**: your predicted day, from the grogginess zone after waking through the morning peak, afternoon dip, evening peak, wind-down and melatonin window, plus a suggested bedtime
-- **Progress tab**: last 14 nights vs your need and your sleep debt trend
+- **Progress tab**: sleep vs your need and your debt trend, switchable between Week, Month and Year with arrows to scrub back through past periods
 
 Click "Load sample data" to explore with two weeks of realistic data.
 

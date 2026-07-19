@@ -1,6 +1,6 @@
 import {
-  estimateSleepNeed, sleepDebt, energySchedule,
-  nightlyTotals, durationHours, isoDaysAgo,
+  estimateSleepNeed, sleepDebt, energySchedule, sleepSeries,
+  durationHours, isoDaysAgo,
 } from "./sleep-model.js";
 import { makeStore, newSession, localIsoDate, exportData, importData } from "./store.js";
 import { parseHealthText } from "./health-import.js";
@@ -9,6 +9,11 @@ import { generateSampleData } from "./sample-data.js";
 const store = makeStore(localStorage);
 let sessions = store.loadSessions();
 let settings = store.loadSettings();
+
+// Progress tab view state: which range is shown and how many whole periods
+// back we've scrubbed (0 = the period ending today).
+let progressRange = "week";
+let progressOffset = 0;
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -70,7 +75,10 @@ function renderSleep(c) {
   const pill = $("#debt-status");
   pill.textContent = { low: "Low", moderate: "Moderate", high: "High" }[c.debt.status];
   pill.className = `pill ${c.debt.status}`;
-  $("#debt-note").textContent = DEBT_NOTES[c.debt.status];
+  $("#debt-note").textContent = DEBT_NOTES[c.debt.status]
+    + (c.debt.covered < c.debt.window
+      ? ` Based on ${c.debt.covered} of ${c.debt.window} nights with data. Import more history for the full picture.`
+      : "");
 
   $("#need-value").textContent = fmtHours(c.need);
   $("#need-source").textContent = settings.needOverride != null
@@ -159,32 +167,42 @@ function renderEnergy(c) {
 /* ---------- Progress tab ---------- */
 
 function renderProgress(c) {
-  const totals = nightlyTotals(sessions);
-  const days = [];
-  for (let age = 13; age >= 0; age--) {
-    const date = isoDaysAgo(c.t, age);
-    days.push({ date, hours: totals.get(date) ?? 0, debt: sleepDebt(sessions, c.need, date).hours });
-  }
+  const series = sleepSeries(sessions, c.need, c.t, progressRange, progressOffset);
+  const buckets = series.buckets;
+  const n = buckets.length;
+  const perMonth = series.bucket === "month";
+  const unit = perMonth ? "month" : "night";
+
+  document.querySelectorAll("#range-tabs button").forEach((b) =>
+    b.classList.toggle("active", b.dataset.range === progressRange));
+  $("#range-period").textContent = series.periodLabel;
+  $("#range-next").disabled = progressOffset === 0;
+  $("#progress-title").textContent = perMonth
+    ? "Avg sleep per month vs your need" : "Sleep vs your need";
 
   const W = 760, H = 240, L = 42, R = 16, T = 16, B = 34;
   const innerW = W - L - R, innerH = H - T - B;
-  const yMax = Math.max(10, c.need + 1, ...days.map((d) => d.hours)) + 0.5;
-  const y = (h) => T + (1 - h / yMax) * innerH;
-  const slot = innerW / 14, barW = slot * 0.62;
+  const slot = innerW / n, barW = Math.min(28, slot * 0.62);
+  const labelEvery = Math.ceil(n / 14); // thin the axis when bars get dense
+  const axisLabel = (i, xMid) =>
+    (i % labelEvery === 0 || i === n - 1)
+      ? `<text x="${xMid.toFixed(1)}" y="${H - B + 16}" fill="#8b97af" font-size="10" text-anchor="middle">${buckets[i].label}</text>`
+      : "";
 
-  const bars = days.map((d, i) => {
+  const yMax = Math.max(10, c.need + 1, ...buckets.map((d) => d.hours)) + 0.5;
+  const y = (h) => T + (1 - h / yMax) * innerH;
+
+  const bars = buckets.map((d, i) => {
     const bx = L + i * slot + (slot - barW) / 2;
-    const filled = d.hours > 0;
-    const color = !filled ? "#232e47" : d.hours >= c.need ? "#4cc38a" : "#f6a13c";
-    const bh = filled ? y(0) - y(d.hours) : 2;
-    return `<rect x="${bx.toFixed(1)}" y="${(filled ? y(d.hours) : y(0) - 2).toFixed(1)}"
+    const color = !d.covered ? "#232e47" : d.met ? "#4cc38a" : "#f6a13c";
+    const bh = d.covered ? y(0) - y(d.hours) : 2;
+    return `<rect x="${bx.toFixed(1)}" y="${(d.covered ? y(d.hours) : y(0) - 2).toFixed(1)}"
         width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${color}"/>
-      <text x="${(bx + barW / 2).toFixed(1)}" y="${H - B + 16}" fill="#8b97af" font-size="10"
-        text-anchor="middle">${d.date.slice(8)}</text>`;
+      ${axisLabel(i, bx + barW / 2)}`;
   }).join("");
 
   $("#progress-chart").innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sleep per night for the last 14 nights">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sleep per ${unit} for ${series.periodLabel}">
       ${bars}
       <line x1="${L}" y1="${y(c.need)}" x2="${W - R}" y2="${y(c.need)}"
         stroke="#e8edf7" stroke-dasharray="6 4" opacity="0.7"/>
@@ -194,27 +212,31 @@ function renderProgress(c) {
       <text x="${L - 8}" y="${y(8) + 4}" fill="#8b97af" font-size="11" text-anchor="end">8h</text>
     </svg>`;
 
-  const dMax = Math.max(6, ...days.map((d) => d.debt)) + 0.5;
+  const s = series.summary;
+  $("#progress-summary").textContent = s.coveredCount
+    ? `Avg ${fmtHours(s.avgHours)} a ${unit} · hit your ${fmtHours(c.need)} need ${s.metCount} of ${s.coveredCount} ${unit}s with data.`
+    : "No sleep data in this period.";
+
+  const dMax = Math.max(6, ...buckets.map((d) => d.debt)) + 0.5;
   const dy = (h) => T + (1 - h / dMax) * innerH;
   const dx = (i) => L + i * slot + slot / 2;
-  const pts = days.map((d, i) => `${dx(i).toFixed(1)},${dy(d.debt).toFixed(1)}`).join(" ");
+  const pts = buckets.map((d, i) => `${dx(i).toFixed(1)},${dy(d.debt).toFixed(1)}`).join(" ");
 
   $("#debt-trend-chart").innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sleep debt trend">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sleep debt trend for ${series.periodLabel}">
       <line x1="${L}" y1="${dy(5)}" x2="${W - R}" y2="${dy(5)}"
         stroke="#f6a13c" stroke-dasharray="6 4" opacity="0.6"/>
       <text x="${W - R}" y="${dy(5) - 5}" fill="#f6a13c" font-size="11" text-anchor="end"
         opacity="0.8">5h, keep debt below this</text>
       <polyline points="${pts}" fill="none" stroke="#a97df5" stroke-width="2.5"/>
-      ${days.map((d, i) => `<circle cx="${dx(i).toFixed(1)}" cy="${dy(d.debt).toFixed(1)}" r="3" fill="#a97df5"/>
-        <text x="${dx(i).toFixed(1)}" y="${H - B + 16}" fill="#8b97af" font-size="10"
-          text-anchor="middle">${d.date.slice(8)}</text>`).join("")}
+      ${buckets.map((d, i) => `<circle cx="${dx(i).toFixed(1)}" cy="${dy(d.debt).toFixed(1)}" r="3" fill="#a97df5"/>
+        ${axisLabel(i, dx(i))}`).join("")}
       <text x="${L - 8}" y="${dy(0) + 4}" fill="#8b97af" font-size="11" text-anchor="end">0h</text>
     </svg>`;
 
-  $("#progress-note").textContent =
-    `Green bars met your ${fmtHours(c.need)} need; orange fell short. ` +
-    `Debt today: ${fmtHours(days.at(-1).debt)}.`;
+  $("#progress-note").textContent = perMonth
+    ? `Each point is that month's average debt. Green months mostly met your ${fmtHours(c.need)} need, orange fell short, grey has no data.`
+    : `Green bars met your ${fmtHours(c.need)} need, orange fell short, grey has no data.`;
 }
 
 /* ---------- Wiring ---------- */
@@ -238,6 +260,26 @@ document.querySelectorAll("nav#tabs button").forEach((btn) => {
     btn.classList.add("active");
     $(`#tab-${btn.dataset.tab}`).classList.add("active");
   });
+});
+
+document.querySelectorAll("#range-tabs button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.range === progressRange) return;
+    progressRange = btn.dataset.range;
+    progressOffset = 0; // jump back to the present when switching range
+    renderProgress(compute());
+  });
+});
+
+$("#range-prev").addEventListener("click", () => {
+  progressOffset += 1;
+  renderProgress(compute());
+});
+
+$("#range-next").addEventListener("click", () => {
+  if (progressOffset === 0) return;
+  progressOffset -= 1;
+  renderProgress(compute());
 });
 
 $("#log-form").addEventListener("submit", (e) => {
